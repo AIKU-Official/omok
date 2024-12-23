@@ -20,8 +20,8 @@
     
     - **알파제로**: Policy Network과 Value Network을 하나의 네트워크로 통합
     
-2. **게임 규칙과 코드 구현
-    - ** 참고한 [프로젝트](https://github.com/AppliedDataSciencePartners/DeepReinforcementLearning)의 경우 connect4로 구현되어 있어 오목 룰을 구현을 새로 구현
+2. **게임 규칙과 코드 구현**
+    - 참고한 [프로젝트](https://github.com/AppliedDataSciencePartners/DeepReinforcementLearning)의 경우 connect4로 구현되어 있어 오목 룰을 구현을 새로 구현
     - 기존 코드가 구버전 텐서플로우로 되어 있어 이를 torch로 포팅
 3. **병렬화(Parallelization)**
     
