@@ -16,9 +16,9 @@
 ## 방법론
 
 1. **알파고, 알파제로 참고**
-    - **알파고**: MCTS 기반으로 작동합니다. Policy ****Network로 탐색 범위를 줄이고,  Value ****Network로 가치를 평가하여 효율적으로 경우의 수를 탐색
+    - **알파고**: MCTS 기반으로 작동합니다. Policy Network로 탐색 범위를 줄이고,  Value Network로 가치를 평가하여 효율적으로 경우의 수를 탐색
     
-    - **알파제로**: Policy ****Network과 Value ****Network을 하나의 네트워크로 통합
+    - **알파제로**: Policy Network과 Value Network을 하나의 네트워크로 통합
     
 2. **게임 규칙과 코드 구현
     - ** 참고한 [프로젝트](https://github.com/AppliedDataSciencePartners/DeepReinforcementLearning)의 경우 connect4로 구현되어 있어 오목 룰을 구현을 새로 구현
