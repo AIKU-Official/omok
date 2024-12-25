@@ -134,28 +134,59 @@ class MCTS():
 		self.tree[node.id] = node
 
 	def merge_with(self, other_tree):
-		"""다른 트리의 통계 정보를 현재 트리에 병합"""
+		"""
+		다른 MCTS 트리의 통계 정보를 현재 트리에 병합
+		Prior probability는 가장 높은 방문 횟수를 가진 트리의 값을 사용
+		
+		Args:
+			other_tree: 병합할 다른 MCTS 트리
+		"""
 		for node_id, other_node in other_tree.items():
 			if node_id not in self.tree:
 				self.tree[node_id] = other_node
 				continue
 				
 			current_node = self.tree[node_id]
-			# 엣지를 action을 키로 하는 딕셔너리로 변환
+			
+			# 엣지들을 (action, edge) 쌍으로 보관
 			current_edges = {action: edge for action, edge in current_node.edges}
 			other_edges = {action: edge for action, edge in other_node.edges}
 			
-			# 모든 action에 대해 통계 병합
+			# 모든 가능한 action에 대해
 			all_actions = set(current_edges.keys()) | set(other_edges.keys())
+			
+			# 기존 엣지 리스트를 비우고 새로 구성
+			current_node.edges = []
+			
 			for action in all_actions:
 				if action in current_edges and action in other_edges:
-					# 양쪽 모두에 있는 엣지는 통계 합산
+					# 양쪽 모두에 있는 엣지는 통계 병합
 					current_edge = current_edges[action]
 					other_edge = other_edges[action]
-					current_edge.stats['N'] += other_edge.stats['N']
-					current_edge.stats['W'] += other_edge.stats['W']
-					if current_edge.stats['N'] > 0:
-						current_edge.stats['Q'] = current_edge.stats['W'] / current_edge.stats['N']
+					
+					# N과 W는 단순 합산
+					total_N = current_edge.stats['N'] + other_edge.stats['N']
+					total_W = current_edge.stats['W'] + other_edge.stats['W']
+					
+					# Prior probability는 방문 횟수가 더 많은 쪽의 값을 사용
+					if current_edge.stats['N'] >= other_edge.stats['N']:
+						prior_P = current_edge.stats['P']
+					else:
+						prior_P = other_edge.stats['P']
+					
+					current_edge.stats['N'] = total_N
+					current_edge.stats['W'] = total_W
+					current_edge.stats['P'] = prior_P
+					
+					if total_N > 0:
+						current_edge.stats['Q'] = total_W / total_N
+					
+					current_node.edges.append((action, current_edge))
+				
 				elif action in other_edges:
 					# 새로운 엣지 추가
 					current_node.edges.append((action, other_edges[action]))
+				
+				else:
+					# 현재 트리에만 있는 엣지 유지
+					current_node.edges.append((action, current_edges[action]))

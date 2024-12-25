@@ -1,13 +1,13 @@
 
 #### SELF PLAY
 EPISODES = 1 # 30  # 나중에 늘리기 
-MCTS_SIMS = 256 # 50
-MEMORY_SIZE = 30000 # 30000
-TURNS_UNTIL_TAU0 = 10 # turn on which it starts playing deterministically
+MCTS_SIMS = 4096 # 50
+MEMORY_SIZE = 20000 # 30000
+TURNS_UNTIL_TAU0 = 5 # turn on which it starts playing deterministically
 CPUCT = 1
 EPSILON = 0.1
 ALPHA = 0.9
-THREADS = 16
+THREADS = 32
 
 
 BOARD_SIZE = 9
@@ -17,7 +17,7 @@ BOARD_SIZE = 9
 BATCH_SIZE = 256 # 256
 EPOCHS = 20
 REG_CONST = 0.0001
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.001
 MOMENTUM = 0.9
 TRAINING_LOOPS = 10
 '''

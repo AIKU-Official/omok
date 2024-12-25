@@ -190,7 +190,7 @@ def run():
                 s['state'].render(lg.logger_memory)
 
             ######## 토너먼트 ########
-            if iteration % 5 == 0:
+            '''if iteration % 5 == 0:
                 print('TOURNAMENT...')
                 scores, _, points, sp_scores = playMatches(
                     current_player, current_player, 1, lg.logger_tourney,
@@ -198,7 +198,10 @@ def run():
                 print('\nSCORES')
                 print(scores)
                 print('\nSTARTING PLAYER / NON-STARTING PLAYER SCORES')
-                print(sp_scores)
+                print(sp_scores)'''
+
+
+
             '''
             print('\n\n')
 

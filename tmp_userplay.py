@@ -1,64 +1,81 @@
-from flask import Flask, render_template, jsonify, request
-from game import Game
-from agent import Agent, User
-from model1 import Residual_CNN
-import config
+
+import numpy as np
+np.set_printoptions(suppress=True)
+
+from shutil import copyfile
+import random
+from importlib import reload
+
+# PyTorch 관련 모듈 임포트
 import torch
 
-app = Flask(__name__)
+# 필요한 모듈 임포트
+from game import Game, GameState
+from agent import Agent, User
+from memory import Memory
+from model1 import Residual_CNN
+from funcs1 import UserplayMatches, playMatchesBetweenVersions
+import torch.multiprocessing as mp
+import config
 
-# 게임 초기화
-game = Game()  # Game 객체 생성
-board_size = int(game.state_size ** 0.5)  # 보드 크기 계산
 
-game.reset()  # 초기 상태로 게임 리셋
-user = User("User", game.state_size, game.action_size)  # 유저 플레이어 초기화
+import loggers as lg
 
-# AI 설정
-ai_nn = Residual_CNN(
-    config.REG_CONST,
-    config.LEARNING_RATE,
-    game.input_shape,
-    game.action_size,
-    config.HIDDEN_CNN_LAYERS,
-)
+from settings import run_folder, run_archive_folder
+import initialise
+import pickle
 
-# 모델 경로를 설정하고 로드
-model_path = "/home/aikusrv01/omok/torch_omok_test/DeepReinforcementLearning/models/gomokucurr_0025.pt"
-ai_nn.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))  # CPU에서 모델 로드
+import csv
+import pandas as pd
 
-# Agent 초기화
-ai = Agent("AI", game.state_size, game.action_size, config.MCTS_SIMS, config.CPUCT, ai_nn, device=None)
+def run():
+    # 'device' 변수 정의
+    device = torch.device('cuda:4' if torch.cuda.is_available() else 'cpu')
+    print(device)
 
-@app.route("/")
-def index():
-    """기본 페이지 렌더링"""
-    return render_template("index.html")
+    lg.logger_main.info('=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*')
+    lg.logger_main.info('=*=*=*=*=*=.      NEW LOG      =*=*=*=*=*')
+    lg.logger_main.info('=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*')
 
-@app.route("/move", methods=["POST"])
-def make_move():
-    """유저의 이동 처리"""
-    data = request.json
-    row, col = data.get("row"), data.get("col")
-    action = row * board_size + col
+    # 환경 설정
+    env = Game()
 
-    # 유저의 돌 두기
-    if game.gameState.board[row * board_size + col] != 0:
-        return jsonify({"error": "Cell is already occupied"}), 400
+    
 
-    game.step(action)  # 유저가 선택한 위치를 게임 상태에 반영
+    ######## 모델 로드 ########
+    best_NN = Residual_CNN(config.REG_CONST, config.LEARNING_RATE,
+                        (2,) + env.grid_shape, env.action_size, config.HIDDEN_CNN_LAYERS)
+    
+    model_path = "/home/aikusrv01/omok/torch_omok_test/DeepReinforcementLearning/models/gomokucurr_0025.pt"
+    best_NN.load_state_dict(torch.load(model_path, map_location=torch.device(device)))  # CPU에서 모델 로드
 
-    if game.gameState.isTerminal():
-        return jsonify({"winner": "User", "board": game.gameState.board.tolist()})
+    best_NN.to(device)
 
-    # AI의 돌 두기
-    ai_action, _, _, _ = ai.act(game.gameState, tau=0)  # AI가 행동을 선택
-    game.step(ai_action)  # AI의 행동을 게임 상태에 반영
+    # config 파일을 실행 폴더로 복사
+    copyfile('./config.py', run_folder + 'config.py')
 
-    if game.gameState.isTerminal():
-        return jsonify({"winner": "AI", "board": game.gameState.board.tolist()})
+    print('\n')
 
-    return jsonify({"board": game.gameState.board.tolist()})
+    ######## 플레이어 생성 ########
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    mp.set_start_method('spawn', force=True)
+
+    current_player = User("User", env.state_size, env.action_size)  # 유저 플레이어 초기화
+    best_player = Agent('best_player', env.state_size, env.action_size,
+                        config.MCTS_SIMS, config.CPUCT, best_NN, device)
+
+    print('TOURNAMENT...')
+    scores, _, points, sp_scores = UserplayMatches(
+        best_player, current_player, 1, lg.logger_tourney,
+        turns_until_tau0=0, memory=None)
+    print('\nSCORES')
+    print(scores)
+    print('\nSTARTING PLAYER / NON-STARTING PLAYER SCORES')
+    print(sp_scores)
+
+
+
+
+if __name__ == '__main__':
+    mp.freeze_support()
+    run()

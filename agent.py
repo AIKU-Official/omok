@@ -28,7 +28,11 @@ class User():
 
     def act(self, state, tau):
         #action = input('Enter your chosen action: ')
-        action = int(input('Enter your chosen action: '))
+
+        # if input is e5 -> 4,4
+        # min = 0,0 (0), max = 8,8 (80)
+        action_str = str(input('Enter your action: '))
+        action = (int(action_str[1:]) - 1) * config.BOARD_SIZE + (ord(action_str[0]) - 97)
         pi = np.zeros(self.action_size)
         pi[action] = 1
         value = None
